@@ -78,7 +78,7 @@ func handleClient(c net.Conn, f *os.File, directOut bool) {
 }
 
 func serverConnectIO(pipePath string, f *os.File, directOut bool) {
-	pipePath = fmt.Sprintf("\\\\.\\pipe\\%s", pipePath)
+	pipePath = fmt.Sprintf(`\\.\pipe\%s`, pipePath)
 	l, err := winio.ListenPipe(pipePath, nil)
 	if err != nil {
 		log.Fatal("listen error:", err)
@@ -95,7 +95,7 @@ func serverConnectIO(pipePath string, f *os.File, directOut bool) {
 }
 
 func clientConnectIO(pipePath string, f **os.File, directOut bool) {
-	pipePath = fmt.Sprintf("\\\\.\\pipe\\%s", pipePath)
+	pipePath = fmt.Sprintf(`\\.\pipe\%s`, pipePath)
 	c, err := winio.DialPipe(pipePath, nil)
 	if err != nil {
 		log.Fatalf("error opening pipe: %v", err)
@@ -114,7 +114,6 @@ func clientConnectIO(pipePath string, f **os.File, directOut bool) {
 		clientWg.Done()
 		reader.WriteTo(w)
 	}
-
 }
 
 func ConnectClient() {
@@ -124,6 +123,9 @@ func ConnectClient() {
 	go clientConnectIO(stdoutNamedPipe, &os.Stdout, true)
 	go clientConnectIO(stderrNamedPipe, &os.Stderr, true)
 	clientWg.Wait()
+
+	// update log default writer
+	log.SetOutput(os.Stderr)
 }
 
 func RunAsElevated() {
